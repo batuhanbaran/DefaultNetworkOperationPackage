@@ -31,6 +31,7 @@ open class ApiServiceProvider<T: Codable>: URLRequestProtocol {
         
         if let path = path {
             let urlWithPath = url.appendingPathComponent(path).absoluteString.removingPercentEncoding?.asURL()
+            guard let urlWithPath = urlWithPath else { return }
             url = urlWithPath
         }
         

@@ -39,21 +39,42 @@ public class APIManager: APIManagerInterface {
         if error != nil {
             // completion failure
             print("makasi : \(String(describing: error))")
-        }
-        
-        if let data = data {
+        }else {
             
-            do {
-                print(String(data: data, encoding: .utf8)!)
-                let dataDecoded = try jsonDecoder.decode(R.self, from: data)
-                print("data : \(data)")
-                completion(.success(dataDecoded))
-            } catch let error {
-                // completion failure
-                print("error :\(error)")
+            if let httpResponse = response as? HTTPURLResponse {
+                
+                let statusCode = HTTPStatusCode(rawValue: httpResponse.statusCode)
+                
+                switch statusCode {
+                case .ok:
+                    if let data = data {
+                        
+                        do {
+
+                            //print(String(data: data, encoding: .utf8) ?? "")
+                            
+                            let dataDecoded = try jsonDecoder.decode(R.self, from: data)
+                            //print("data : \(data)")
+                            
+                            completion(.success(dataDecoded))
+                            
+                        } catch let error {
+                            
+                            // if it cannot decode the given model then catch and call.
+                            completion(.failure(ErrorResponse.init(serverResponse: ServerResponse.init(returnMessage: "\(error.localizedDescription)", returnCode: HTTPStatusCode.ok.rawValue), apiConnectionErrorType: ApiConnectionErrorType.dataDecodedFailed(error.localizedDescription))))
+                        }
+                    }
+                    
+                case .notfound:
+                    completion(.failure(ErrorResponse.init(serverResponse: ServerResponse.init(returnMessage: "Not Found!", returnCode: HTTPStatusCode.notfound.rawValue), apiConnectionErrorType: ApiConnectionErrorType.serverError(HTTPStatusCode.notfound.rawValue))))
+                    
+                case .unauthorized:
+                    completion(.failure(ErrorResponse.init(serverResponse: ServerResponse.init(returnMessage: "Api key invalid or missing!", returnCode: HTTPStatusCode.unauthorized.rawValue))))
+                default:
+                    break
+                }
             }
         }
-        
     }
     
     deinit {

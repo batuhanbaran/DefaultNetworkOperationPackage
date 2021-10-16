@@ -7,6 +7,12 @@
 
 import Foundation
 
+public enum HTTPStatusCode: Int {
+    case ok = 200
+    case notfound = 404
+    case unauthorized = 401
+}
+
 public class ServerResponse: Codable, Error {
     public let returnMessage: String?
     public let returnCode: Int?
